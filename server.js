@@ -4,11 +4,11 @@ const io = new Server(3000);
 const clusters= {};
 
 io.on('connection', (socket) => {
-  console.log(`Client connected: ${socket.id}`)
+  console.log(`Client connected! Session ID: ${socket.id}`)
 
   socket.on('registerCluster', (clusterId) => {
     clusters[clusterId] = socket.id;
-    console.log(`Cluster registered: ${clusterId} with ID: ${socket.id}`)
+    console.log(`Cluster registered: ${clusterId} with Session ID: ${socket.id}`)
   })
 
   socket.on('cronJobMessage', (msg, ...data) => {
@@ -21,12 +21,12 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
-    console.log(`Cluster Disconnected: ${socket.id}`)
+    console.log(`Client Disconnected! Session ID: ${socket.id}`)
 
     for (const clusterId in Object.keys(clusters)) {
       if (clusters[clusterId] === socket.id) {
         delete clusters[clusterId];
-        console.log(`Cluster Disconnected: ${clusterId}`)
+        console.log(`Cluster unregistered: ${clusterId} with Session ID: ${socket.id}`)
         break;
       }
     }
