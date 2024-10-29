@@ -10,8 +10,6 @@ console.log("Starting Cron Job")
 socket.on('connect', async () => {
   console.log("Starting checking process... attempting to connect to the database.")
 
-  console.log(process.env.POSTGRES_ROOT)
-
   const database = new pg.Client({
     host: process.env.DB_HOST,
     port: "5432",
@@ -37,12 +35,12 @@ socket.on('connect', async () => {
   const infraction = await database.query(`SELECT * FROM infractions WHERE infractionType = $1 AND infractionActive = $2 AND CAST(durations ->> 'date' AS BIGINT) + CAST(durations ->> 'time' AS BIGINT) <= $3`, ["mute", true, Date.now()])
   const giveaway = await database.query(`SELECT * FROM giveaway WHERE active = $1 AND date + time <= $2`, [true, Date.now()])
 
-  await Promise.all([
-    socket.emit("cronJobMessage", `reminder_batch_${Date.now()}`, reminder.rows),
-    socket.emit("cronJobMessage", `entitlement_batch_${Date.now()}`, premium.rows),
-    socket.emit("cronJobMessage", `punishment_batch_${Date.now()}`, infraction.rows),
-    socket.emit("cronJobMessage", `giveaway_batch_${Date.now()}`, giveaway.rows)
-  ])
+  await socket.emit("cronJobMessage", `batch_${Date.now()}`, {
+    reminder: reminder.rows,
+    entitlement: premium.rows,
+    punishment: infraction.rows,
+    giveaway: giveaway.rows
+  })
 
   console.log("==== JOB DONE === EXITTING ===")
 

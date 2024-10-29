@@ -11,7 +11,7 @@ io.on('connection', (socket) => {
     console.log(`Cluster registered: ${clusterId} with Session ID: ${socket.id}`)
   })
 
-  socket.on('cronJobMessage', (msg, data = []) => {
+  socket.on('cronJobMessage', (msg, data = {}) => {
     console.log(`Received message from cron job: ${msg}`);
 
     for (const clusterId in Object.keys(clusters)) {
