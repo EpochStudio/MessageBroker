@@ -14,7 +14,7 @@ socket.on('connect', async () => {
     host: process.env.DB_HOST,
     port: "5432",
     password: process.env.POSTGRES_ROOT,
-    database: "galaxiesbeta",
+    database: "galaxies",
     idle_in_transaction_session_timeout: 30000,
     user: "root",
   })
