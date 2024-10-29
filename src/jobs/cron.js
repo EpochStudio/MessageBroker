@@ -31,8 +31,8 @@ socket.on('connect', async () => {
   }
 
   const reminder = await database.query(`SELECT * FROM reminder WHERE CAST(durations ->> 'date' AS BIGINT) + CAST(durations ->> 'time' AS BIGINT) <= $1`, [Date.now()]);
-  const premium = await database.query(`SELECT * FROM guilds WHERE premium ->> 'status' = $1 AND CAST(premium -> 'durations' ->> 'date' AS BIGINT) + CAST(premium -> 'durations' ->> 'time' AS BIGINT) <= $2`, [true, Date.now()])
-  const infraction = await database.query(`SELECT * FROM infractions WHERE infractionType = $1 AND infractionActive = $2 AND CAST(durations ->> 'date' AS BIGINT) + CAST(durations ->> 'time' AS BIGINT) <= $3`, ["mute", true, Date.now()])
+  const premium = await database.query(`SELECT * FROM guilds WHERE premium ->> 'status' = $1 AND premium -> 'durations' ->> 'time' IS NOT NULL AND CAST(premium -> 'durations' ->> 'date' AS BIGINT) + CAST(premium -> 'durations' ->> 'time' AS BIGINT) <= $2`, [true, Date.now()])
+  const infraction = await database.query(`SELECT * FROM infractions WHERE infractionType = $1 AND infractionActive = $2 AND durations ->> 'time' IS NOT NULL AND CAST(durations ->> 'date' AS BIGINT) + CAST(durations ->> 'time' AS BIGINT) <= $3`, ["mute", true, Date.now()])
   const giveaway = await database.query(`SELECT * FROM giveaway WHERE active = $1 AND date + time <= $2`, [true, Date.now()])
 
   await socket.emit("cronJobMessage", `batch_${Date.now()}`, {
