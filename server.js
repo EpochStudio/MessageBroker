@@ -8,14 +8,30 @@ console.log(`[Message Broker] Running on version ${require('./package.json').ver
 io.on('connection', (socket) => {
   console.log(`Client connected! Session ID: ${socket.id}`)
 
-  socket.on('registerCluster', (client = {}) => {
+  socket.on('registerCluster', async(client = {}, callback) => {
     if (!String(client.clusterId) || !client.signature) return socket.disconnect();
+
+    try {
+      await callback("received")
+    } catch (err) {
+      if (err.message.includes("function")) {
+        console.log("Callback not issued, as an acknowledgment from the server was not required.")
+      }
+    }
 
     clusters[`${client.signature}_${client.clusterId}`] = socket.id;
     console.log(`Cluster registered: ${client.clusterId} with Session ID: ${socket.id} with Signature: ${client.signature}`)
   })
 
-  socket.on('cronJobMessage', async (msg, data = {}) => {
+  socket.on('cronJobMessage', async (msg, data = {}, callback) => {
+    try {
+      await callback("received")
+    } catch (err) {
+      if (err.message.includes("function")) {
+        console.log("Callback not issued, as an acknowledgment from the server was not required.")
+      }
+    }
+
     console.log(`Received message from cron job: ${msg}`);
 
     for (const keys of Object.keys(clusters)) {
