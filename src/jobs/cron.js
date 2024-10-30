@@ -34,29 +34,17 @@ socket.on('connect', async () => {
   const infraction = await database.query(`SELECT * FROM infractions WHERE infractionType = $1 AND infractionActive = $2 AND durations ->> 'time' IS NOT NULL AND CAST(durations ->> 'date' AS BIGINT) + CAST(durations ->> 'time' AS BIGINT) <= $3`, ["mute", true, Date.now()])
   const giveaway = await database.query(`SELECT * FROM giveaway WHERE active = $1 AND date + time <= $2`, [true, Date.now()])
 
-  await socket.emit("cronJobMessage", `${database.connectionParameters.database}_data_${Date.now()}`, {
+  await socket.emitWithAck("cronJobMessage", `${database.connectionParameters.database}_data_${Date.now()}`, {
     reminder: reminder.rows,
     entitlement: premium.rows,
     punishment: infraction.rows,
     giveaway: giveaway.rows
-  })
+  }).then(async () => {
+    console.log("[JOB_DONE] Job completed... shutdown...")
 
-  console.log("[JOB_DONE] Job completed... attempting to gracefully shutdown...")
-
-  try {
     await Promise.all([
       database.end(),
       socket.disconnect()
     ])
-
-    console.log("[COMPLETION - GRACEFUL] Graceful Shutdown Operation completed. Disconnected from Message Broker Server and Database Client")
-
-    process.exit(1);
-  } catch (err) {
-    console.log("[COMPLETION - FORCEFUL] A graceful shutdown was not successful. Issuing a forceful shutdown")
-
-    console.error(err);
-
-    process.exit(1);
-  }
+  })
 })
