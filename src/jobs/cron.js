@@ -2,13 +2,12 @@ require('dotenv').config()
 
 const pg = require('pg')
 const {io} = require('socket.io-client');
-
 const socket = io('ws://localhost:3000');
 
-console.log("Starting Cron Job")
+console.log("[START] Starting Cron Job")
 
 socket.on('connect', async () => {
-  console.log("Starting checking process... attempting to connect to the database.")
+  console.log("[DB_CONNECTION] Starting checking process... attempting to connect to the database.")
 
   const database = new pg.Client({
     host: process.env.DB_HOST,
@@ -22,9 +21,9 @@ socket.on('connect', async () => {
   try {
     await database.connect();
 
-    console.log("Successfully established database connection.")
+    console.log("[DB_CONNECTION_SUCCESS] Successfully established database connection.")
   } catch (err) {
-    console.log("Error occurred, stopping all action.")
+    console.log("[DB_CONNECTION_ERROR] Error occurred, stopping all action.")
     console.error(err);
 
     process.exit(1);
@@ -42,17 +41,19 @@ socket.on('connect', async () => {
     giveaway: giveaway.rows
   })
 
-  console.log("==== JOB DONE === ATTEMPTING AT A GRACEFUL SHUTDOWN ===")
+  console.log("[JOB_DONE] Job completed... attempting to gracefully shutdown...")
 
-  try{
+  try {
     await Promise.all([
       database.end(),
       socket.disconnect()
     ])
 
-    console.log("Graceful Shutdown Operation completed. Disconnected from Message Broker Server and Database Client")
+    console.log("[COMPLETION - GRACEFUL] Graceful Shutdown Operation completed. Disconnected from Message Broker Server and Database Client")
+
+    process.exit(1);
   } catch (err) {
-    console.log("A graceful shutdown was not successful. Issuing a forceful shutdown")
+    console.log("[COMPLETION - FORCEFUL] A graceful shutdown was not successful. Issuing a forceful shutdown")
 
     console.error(err);
 
