@@ -1,31 +1,31 @@
-const { Server } = require('socket.io')
+const {Server} = require('socket.io')
 const io = new Server(3000);
 
-const clusters= {};
+const clusters = {};
 
 console.log(`[Message Broker] Running on version ${require('./package.json').version} stable.`)
 
 io.on('connection', (socket) => {
   console.log(`Client connected! Session ID: ${socket.id}`)
 
-  socket.on('registerCluster', (clusterId, signature) => {
-    if (!clusterId || !signature) return socket.disconnect(true);
+  socket.on('registerCluster', (client = {}) => {
+    if (!String(client.clusterId) || !client.signature) return socket.disconnect();
 
-    clusters[`${signature}.${clusterId}`] = socket.id;
-    console.log(`Cluster registered: ${clusterId} with Session ID: ${socket.id} with Signature: ${signature}`)
+    clusters[`${client.signature}_${client.clusterId}`] = socket.id;
+    console.log(`Cluster registered: ${client.clusterId} with Session ID: ${socket.id} with Signature: ${client.signature}`)
   })
 
-  socket.on('cronJobMessage', (msg, data = {}) => {
+  socket.on('cronJobMessage', async (msg, data = {}) => {
     console.log(`Received message from cron job: ${msg}`);
 
-    for (const keys in Object.keys(clusters)) {
+    for (const keys of Object.keys(clusters)) {
       const [name, type, _time] = msg.split("_");
-      const [clientSignature, clientCluster] = keys.split(".")
+      const [clientSignature, clientCluster] = keys.split("_")
 
       if (name.toLowerCase() !== clientSignature.toLowerCase()) return;
 
-      io.to(clusters[keys]).emit('messageFromCron', { clusterId: keys, msg, data });
-      console.log(`Forwarded ${type} to Cluster ${clientCluster}`, { clusterId: keys, msg });
+      io.to(clusters[keys]).emit('messageFromCron', {clusterId: keys, msg, data});
+      console.log(`Forwarded ${type} to Cluster ${clientCluster}`, {clusterId: keys, msg});
     }
   })
 
