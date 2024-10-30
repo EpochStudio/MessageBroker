@@ -35,7 +35,7 @@ socket.on('connect', async () => {
   const infraction = await database.query(`SELECT * FROM infractions WHERE infractionType = $1 AND infractionActive = $2 AND durations ->> 'time' IS NOT NULL AND CAST(durations ->> 'date' AS BIGINT) + CAST(durations ->> 'time' AS BIGINT) <= $3`, ["mute", true, Date.now()])
   const giveaway = await database.query(`SELECT * FROM giveaway WHERE active = $1 AND date + time <= $2`, [true, Date.now()])
 
-  await socket.emit("cronJobMessage", `batch_${Date.now()}`, {
+  await socket.emit("cronJobMessage", `${database.connectionParameters.database}_data_${Date.now()}`, {
     reminder: reminder.rows,
     entitlement: premium.rows,
     punishment: infraction.rows,
@@ -46,7 +46,7 @@ socket.on('connect', async () => {
 
   try{
     await Promise.all([
-      database.close(),
+      database.end(),
       socket.disconnect()
     ])
 
