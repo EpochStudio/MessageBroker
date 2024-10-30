@@ -6,9 +6,11 @@ const clusters= {};
 io.on('connection', (socket) => {
   console.log(`Client connected! Session ID: ${socket.id}`)
 
-  socket.on('registerCluster', (clusterId) => {
-    clusters[clusterId] = socket.id;
-    console.log(`Cluster registered: ${clusterId} with Session ID: ${socket.id}`)
+  socket.on('registerCluster', (clusterId, signature) => {
+    if (!clusterId || !signature)
+
+    clusters[`${signature}.${clusterId}`] = socket.id;
+    console.log(`Cluster registered: ${clusterId} with Session ID: ${socket.id} with Signature: ${signature}`)
   })
 
   socket.on('cronJobMessage', (msg, data = {}) => {
@@ -20,8 +22,8 @@ io.on('connection', (socket) => {
     }
   })
 
-  socket.on('disconnect', () => {
-    console.log(`Client Disconnected! Session ID: ${socket.id}`)
+  socket.on('disconnect', (reason) => {
+    console.log(`Client Disconnected! Session ID: ${socket.id} with Reason: ${reason}`)
 
     for (const clusterId in Object.keys(clusters)) {
       if (clusters[clusterId] === socket.id) {
