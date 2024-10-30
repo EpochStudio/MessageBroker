@@ -42,7 +42,20 @@ socket.on('connect', async () => {
     giveaway: giveaway.rows
   })
 
-  console.log("==== JOB DONE === EXITTING ===")
+  console.log("==== JOB DONE === ATTEMPTING AT A GRACEFUL SHUTDOWN ===")
 
-  process.exit();
+  try{
+    await Promise.all([
+      database.close(),
+      socket.disconnect()
+    ])
+
+    console.log("Graceful Shutdown Operation completed. Disconnected from Message Broker Server and Database Client")
+  } catch (err) {
+    console.log("A graceful shutdown was not successful. Issuing a forceful shutdown")
+
+    console.error(err);
+
+    process.exit(1);
+  }
 })
