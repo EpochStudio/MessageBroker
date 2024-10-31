@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', (reason) => {
     console.log(`Client Disconnected! Session ID: ${socket.id} with Reason: ${reason}`)
 
-    for (const clusterId in Object.keys(clusters)) {
+    for (const clusterId of Object.keys(clusters)) {
       if (clusters[clusterId] === socket.id) {
         delete clusters[clusterId];
         console.log(`Cluster unregistered: ${clusterId} with Session ID: ${socket.id}`)
