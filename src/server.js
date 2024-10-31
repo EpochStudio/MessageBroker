@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
 
       if (name.toLowerCase() !== clientSignature.toLowerCase()) continue;
 
-      await io.to(clusters[keys]).emitWithAck('messageFromCron', {clusterId: keys, msg, data});
+      io.to(clusters[keys]).emit('messageFromCron', {clusterId: keys, msg, data});
       console.log(`Forwarded ${type} to Cluster ${clientCluster}`, {clusterId: keys, msg});
     }
   })
