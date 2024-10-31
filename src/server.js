@@ -52,7 +52,6 @@ io.on('connection', (socket) => {
       if (clusters[clusterId] === socket.id) {
         delete clusters[clusterId];
         console.log(`Cluster unregistered: ${clusterId} with Session ID: ${socket.id}`)
-        break;
       }
     }
   })
