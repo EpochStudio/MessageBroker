@@ -40,8 +40,7 @@ io.on('connection', (socket) => {
 
       if (name.toLowerCase() !== clientSignature.toLowerCase()) continue;
 
-      const response = await io.to(clusters[keys]).emitWithAck('messageFromCron', {clusterId: keys, msg, data});
-      if (response === 503) return console.log(`${type.toUpperCase()} delivery failed for ${keys} as the Client was not ready.`)
+      await io.to(clusters[keys]).emitWithAck('messageFromCron', {clusterId: keys, msg, data});
       console.log(`Forwarded ${type} to Cluster ${clientCluster}`, {clusterId: keys, msg});
     }
   })
