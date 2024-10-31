@@ -12,7 +12,7 @@ io.on('connection', (socket) => {
     if (!String(client.clusterId) || !client.signature) return socket.disconnect();
 
     try {
-      await callback("received")
+      await callback(200)
     } catch (err) {
       if (err.message.includes("function")) {
         console.log("Callback not issued, as an acknowledgment from the server was not required.")
@@ -25,7 +25,7 @@ io.on('connection', (socket) => {
 
   socket.on('cronJobMessage', async (msg, data = {}, callback) => {
     try {
-      await callback("received")
+      await callback(200)
     } catch (err) {
       if (err.message.includes("function")) {
         console.log("Callback not issued, as an acknowledgment from the server was not required.")
@@ -40,7 +40,9 @@ io.on('connection', (socket) => {
 
       if (name.toLowerCase() !== clientSignature.toLowerCase()) return;
 
-      io.to(clusters[keys]).emit('messageFromCron', {clusterId: keys, msg, data});
+      const response = await socket.timeout(5000).to(clusters[keys]).emitWithAck('messageFromCron', {clusterId: keys, msg, data});
+
+      if (!response || response !== 200) return console.log(`Failed to forward ${type} to connection ${keys}`)
       console.log(`Forwarded ${type} to Cluster ${clientCluster}`, {clusterId: keys, msg});
     }
   })

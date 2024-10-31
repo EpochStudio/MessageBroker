@@ -34,13 +34,13 @@ socket.on('connect', async () => {
   const infraction = await database.query(`SELECT * FROM infractions WHERE infractionType = $1 AND infractionActive = $2 AND durations ->> 'time' IS NOT NULL AND CAST(durations ->> 'date' AS BIGINT) + CAST(durations ->> 'time' AS BIGINT) <= $3`, ["mute", true, Date.now()])
   const giveaway = await database.query(`SELECT * FROM giveaway WHERE active = $1 AND date + time <= $2`, [true, Date.now()])
 
-  await socket.emitWithAck("cronJobMessage", `${database.connectionParameters.database}_data_${Date.now()}`, {
+  await socket.timeout(5000).emitWithAck("cronJobMessage", `${database.connectionParameters.database}_data_${Date.now()}`, {
     reminder: reminder.rows,
     entitlement: premium.rows,
     punishment: infraction.rows,
     giveaway: giveaway.rows
-  }).then(async () => {
-    console.log("[JOB_DONE] Job completed... shutdown...")
+  }).then(async (val) => {
+    val !== 200 ? console.log(`[Job Incomplete] Failed to receive Status Code 200 from MessageBroker Server`) : console.log("[Job Completed] Job completed... shutting down...")
 
     await Promise.all([
       database.end(),
