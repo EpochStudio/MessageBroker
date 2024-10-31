@@ -40,9 +40,7 @@ io.on('connection', (socket) => {
 
       if (name.toLowerCase() !== clientSignature.toLowerCase()) return;
 
-      const response = await socket.timeout(5000).to(clusters[keys]).emitWithAck('messageFromCron', {clusterId: keys, msg, data});
-
-      if (!response || response !== 200) return console.log(`Failed to forward ${type} to connection ${keys}`)
+      io.to(clusters[keys]).emit('messageFromCron', {clusterId: keys, msg, data});
       console.log(`Forwarded ${type} to Cluster ${clientCluster}`, {clusterId: keys, msg});
     }
   })
