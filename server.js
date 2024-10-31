@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
       const [name, type, _time] = msg.split("_");
       const [clientSignature, clientCluster] = keys.split("_")
 
-      if (name.toLowerCase() !== clientSignature.toLowerCase()) return;
+      if (name.toLowerCase() !== clientSignature.toLowerCase()) continue;
 
       io.to(clusters[keys]).emit('messageFromCron', {clusterId: keys, msg, data});
       console.log(`Forwarded ${type} to Cluster ${clientCluster}`, {clusterId: keys, msg});
