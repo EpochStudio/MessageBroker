@@ -3,7 +3,7 @@ const io = new Server(3000);
 
 const clusters = {};
 
-console.log(`[Message Broker] Running on version ${require('./package.json').version} stable.`)
+console.log(`[Message Broker] Running on version ${require('../package.json').version} stable.`)
 
 io.on('connection', (socket) => {
   console.log(`Client connected! Session ID: ${socket.id}`)
