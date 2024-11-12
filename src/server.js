@@ -16,10 +16,7 @@ io.on('connection', (socket) => {
     if (typeof clientOptions.receiveBuffer !== 'object' || !clientOptions.length) return socket.disconnect(true);
 
     for (const buffer of clientOptions.receiveBuffer) {
-      if (!Constants.allowedBuffers.includes(buffer)) {
-        socket.disconnect(true)
-        break;
-      }
+      if (!Constants.allowedBuffers.includes(buffer)) return socket.disconnect(true)
     }
 
     // Callback if necessary
