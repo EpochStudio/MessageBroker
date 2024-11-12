@@ -1,16 +1,28 @@
 const {Server} = require('socket.io')
+const Constants = require('./utils/constant')
 const io = new Server(3000);
 
-const clusters = {};
+const clients = {};
 
 console.log(`[Message Broker] Running on version ${require('../package.json').version} stable.`)
 
 io.on('connection', (socket) => {
   console.log(`Client connected! Session ID: ${socket.id}`)
 
-  socket.on('registerCluster', async(clientOptions = {}, callback) => {
-    if (!String(clientOptions.clusterId) || !clientOptions.signature) return socket.disconnect();
+  socket.on('registerCluster', async (clientOptions = {}, callback) => {
+    // Verifying client options passed through.
 
+    if (!String(clientOptions.clusterId) || !clientOptions.signature) return socket.disconnect(true);
+    if (typeof clientOptions.receiveBuffer !== 'object' || !clientOptions.length) return socket.disconnect(true);
+
+    for (const buffer of clientOptions.receiveBuffer) {
+      if (!Constants.allowedBuffers.includes(buffer)) {
+        socket.disconnect(true)
+        break;
+      }
+    }
+
+    // Callback if necessary
     try {
       await callback(200)
     } catch (err) {
@@ -19,11 +31,17 @@ io.on('connection', (socket) => {
       }
     }
 
-    clusters[`${clientOptions.signature}_${clientOptions.clusterId}`] = socket.id;
+    // Register in the System
+    clients[`${clientOptions.signature}_${clientOptions.clusterId}`] = {
+      sessionId: socket.id,
+      signature: `${clientOptions.signature}_${clientOptions.clusterId}`,
+      allowedBuffer: clientOptions.receiveBuffer,
+      receiveTransactionInfo: clientOptions.receiveTransactionInfo || false
+    };
     console.log(`Cluster registered: ${clientOptions.clusterId} with Session ID: ${socket.id} with Signature: ${clientOptions.signature}`)
   })
 
-  socket.on('cronJobMessage', async (msg, data = {}, callback) => {
+  socket.on('cronJobMessage', async (tid, transactionInfo = {}, data = {}, callback) => {
     try {
       await callback(200)
     } catch (err) {
@@ -32,25 +50,30 @@ io.on('connection', (socket) => {
       }
     }
 
-    console.log(`Received message from cron job: ${msg}`);
+    console.log(`Transaction item received from cronjob: T${tid}`);
 
-    for (const keys of Object.keys(clusters)) {
-      const [name, type, _time] = msg.split("_");
-      const [clientSignature, clientCluster] = keys.split("_")
+    for (const key of Object.keys(clients)) {
+      const [clientSignature, clientCluster] = key.split("_")
 
-      if (name.toLowerCase() !== clientSignature.toLowerCase()) continue;
+      if (transactionInfo.database.toLowerCase() !== clientSignature.toLowerCase()) continue;
+      if (!clients[key].allowedBuffer.includes(transactionInfo.interval)) continue;
 
-      await io.to(clusters[keys]).emitWithAck('messageFromCron', {clusterId: keys, msg, data});
-      console.log(`Forwarded ${type} to Cluster ${clientCluster}`, {clusterId: keys, msg});
+      await io.to(clients[key].sessionId).emitWithAck('messageFromCron', {
+        registeredKey: key,
+        tid,
+        transactionInfo: clients[key].receiveTransactionInfo ? transactionInfo : null,
+        data
+      });
+      console.log(`Forwarded ${transactionInfo.type} (Interval ${transactionInfo.interval}) to connection ${clientSignature} of cluster ${clientCluster} // CID: ${key} // TID: ${tid}`);
     }
   })
 
   socket.on('disconnect', (reason) => {
     console.log(`Client Disconnected! Session ID: ${socket.id} with Reason: ${reason}`)
 
-    for (const clusterId of Object.keys(clusters)) {
-      if (clusters[clusterId] === socket.id) {
-        delete clusters[clusterId];
+    for (const clusterId of Object.keys(clients)) {
+      if (clients[clusterId].sessionId === socket.id) {
+        delete clients[clusterId];
         console.log(`Cluster unregistered: ${clusterId} with Session ID: ${socket.id}`)
       }
     }
