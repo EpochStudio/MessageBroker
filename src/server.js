@@ -28,14 +28,16 @@ io.on('connection', (socket) => {
       }
     }
 
+    const regKey = `${clientOptions.signature}_${clientOptions.clusterId}`
+
     // Register in the System
-    clients[`${clientOptions.signature}_${clientOptions.clusterId}`] = {
+    clients[regKey] = {
       sessionId: socket.id,
-      registeredKey: `${clientOptions.signature}_${clientOptions.clusterId}`,
+      registeredKey: regKey,
       allowedBuffer: clientOptions.receiveBuffer,
       receiveTransactionInfo: clientOptions.receiveTransactionInfo || false
     };
-    console.log(`Cluster registered: ${clientOptions.clusterId} with Session ID: ${socket.id} with Signature: ${clientOptions.signature}`)
+    console.log(`Client registered: ${regKey} with Session ID: ${socket.id} with Signature: ${clientOptions.signature} | Cluster: ${clientOptions.clusterId}`)
   })
 
   socket.on('cronJobMessage', async (tid, transactionInfo = {}, data = {}, callback) => {
