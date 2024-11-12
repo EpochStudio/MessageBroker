@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
     // Register in the System
     clients[`${clientOptions.signature}_${clientOptions.clusterId}`] = {
       sessionId: socket.id,
-      signature: `${clientOptions.signature}_${clientOptions.clusterId}`,
+      registeredKey: `${clientOptions.signature}_${clientOptions.clusterId}`,
       allowedBuffer: clientOptions.receiveBuffer,
       receiveTransactionInfo: clientOptions.receiveTransactionInfo || false
     };
@@ -71,10 +71,10 @@ io.on('connection', (socket) => {
   socket.on('disconnect', (reason) => {
     console.log(`Client Disconnected! Session ID: ${socket.id} with Reason: ${reason}`)
 
-    for (const clusterId of Object.keys(clients)) {
-      if (clients[clusterId].sessionId === socket.id) {
-        delete clients[clusterId];
-        console.log(`Cluster unregistered: ${clusterId} with Session ID: ${socket.id}`)
+    for (const key of Object.keys(clients)) {
+      if (clients[key].sessionId === socket.id) {
+        delete clients[key];
+        console.log(`Client unregistered: ${key} with Session ID: ${socket.id}`)
       }
     }
   })
