@@ -1,0 +1,17 @@
+module.exports = {
+  loginCred: {
+    postgresql: {
+      host: process.env.DB_HOST,
+      port: "5432",
+      password: process.env.POSTGRES_ROOT,
+      idle_in_transaction_session_timeout: 30000,
+      user: "root"
+    },
+    redis: {
+      host: "localhost",
+      port: 6379,
+      db: 5,
+      password: process.env.REDIS_CLI
+    }
+  }
+}
