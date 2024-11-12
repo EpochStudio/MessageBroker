@@ -8,8 +8,8 @@ console.log(`[Message Broker] Running on version ${require('../package.json').ve
 io.on('connection', (socket) => {
   console.log(`Client connected! Session ID: ${socket.id}`)
 
-  socket.on('registerCluster', async(client = {}, callback) => {
-    if (!String(client.clusterId) || !client.signature) return socket.disconnect();
+  socket.on('registerCluster', async(clientOptions = {}, callback) => {
+    if (!String(clientOptions.clusterId) || !clientOptions.signature) return socket.disconnect();
 
     try {
       await callback(200)
@@ -19,8 +19,8 @@ io.on('connection', (socket) => {
       }
     }
 
-    clusters[`${client.signature}_${client.clusterId}`] = socket.id;
-    console.log(`Cluster registered: ${client.clusterId} with Session ID: ${socket.id} with Signature: ${client.signature}`)
+    clusters[`${clientOptions.signature}_${clientOptions.clusterId}`] = socket.id;
+    console.log(`Cluster registered: ${clientOptions.clusterId} with Session ID: ${socket.id} with Signature: ${clientOptions.signature}`)
   })
 
   socket.on('cronJobMessage', async (msg, data = {}, callback) => {
