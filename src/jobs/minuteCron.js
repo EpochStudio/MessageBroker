@@ -4,20 +4,14 @@ const pg = require('pg')
 const {io} = require('socket.io-client');
 const socket = io('ws://localhost:3000');
 const util = require('../utils/utils')
+const config = require('../config')
 
 console.log("[START] Starting Cron Job")
 
 socket.on('connect', async () => {
   console.log("[DB_CONNECTION] Starting checking process... attempting to connect to the database.")
 
-  const database = new pg.Client({
-    host: process.env.DB_HOST,
-    port: "5432",
-    password: process.env.POSTGRES_ROOT,
-    database: "galaxies",
-    idle_in_transaction_session_timeout: 30000,
-    user: "root",
-  })
+  const database = new pg.Client({...config.loginCred.postgresql, database: "galaxies"})
 
   try {
     await database.connect();
