@@ -3,6 +3,7 @@ require('dotenv').config()
 const pg = require('pg')
 const {io} = require('socket.io-client');
 const socket = io('ws://localhost:3000');
+const util = require('../utils/utils')
 
 console.log("[START] Starting Cron Job")
 
@@ -34,13 +35,23 @@ socket.on('connect', async () => {
   const infraction = await database.query(`SELECT * FROM infractions WHERE infractionType = $1 AND infractionActive = $2 AND durations ->> 'time' IS NOT NULL AND CAST(durations ->> 'date' AS BIGINT) + CAST(durations ->> 'time' AS BIGINT) <= $3`, ["mute", true, Date.now()])
   const giveaway = await database.query(`SELECT * FROM giveaway WHERE active = $1 AND date + time <= $2`, [true, Date.now()])
 
-  await socket.emitWithAck("cronJobMessage", `${database.connectionParameters.database}_data_${Date.now()}`, {
-    reminder: reminder.rows,
-    entitlement: premium.rows,
-    punishment: infraction.rows,
-    giveaway: giveaway.rows
-  }).then(async () => {
-    console.log("[JOB_DONE] Job completed... shutdown...")
+  const tid = util.snowflake()
+
+  await socket.emitWithAck("cronJobMessage", tid,
+    {
+      database: database.connectionParameters.database ?? "UNKNOWN",
+      type: 'data',
+      interval: 'minute',
+      transactionTime: Date.now(),
+      transactionId: tid
+    },
+    {
+      reminder: reminder.rows,
+      entitlement: premium.rows,
+      punishment: infraction.rows,
+      giveaway: giveaway.rows
+    }).then(async () => {
+    console.log("[Job Complete] Job completed... gracefully exiting....");
 
     await Promise.all([
       database.end(),
