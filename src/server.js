@@ -1,6 +1,7 @@
 const {Server} = require('socket.io')
 const Constants = require('./utils/constant')
 const io = new Server(3000);
+const redis = require('./struct/redis')
 
 const clients = {};
 
