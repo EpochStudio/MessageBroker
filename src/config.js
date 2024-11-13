@@ -8,9 +8,10 @@ module.exports = {
       user: "root"
     },
     redis: {
-      host: "localhost",
-      port: 6379,
-      db: 5,
+      socket: {
+        host: "localhost",
+        port: 6379,
+      },
       password: process.env.REDIS_CLI
     }
   }
