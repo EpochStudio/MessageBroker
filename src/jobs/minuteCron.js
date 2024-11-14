@@ -2,9 +2,9 @@ require('dotenv').config()
 
 const pg = require('pg')
 const {io} = require('socket.io-client');
-const socket = io('ws://localhost:3000');
 const util = require('../utils/utils')
 const config = require('../config')
+const socket = io(`ws://localhost:${config.serverport}`);
 
 console.log("[START] Starting Cron Job")
 

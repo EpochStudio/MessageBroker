@@ -2,9 +2,10 @@ require('dotenv').config()
 
 const {Server} = require('socket.io')
 const Constants = require('./utils/constant')
-const io = new Server(3000);
+const config = require('./config');
+const io = new Server(config.serverport);
 const RedisManager = require('./struct/redis')
-const RedisClient = new RedisManager({...require('./config').loginCred.redis, database: 9});
+const RedisClient = new RedisManager({...config.loginCred.redis, database: 9});
 const {warn} = require('./utils/logger');
 
 console.log(`[Message Broker] Running on version ${require('../package.json').version} stable.`)
