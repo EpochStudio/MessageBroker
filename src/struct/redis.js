@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const redis = require('redis')
 const {log, debug, error, warn} = require('../utils/logger')
 
@@ -16,6 +18,14 @@ module.exports = class Redis {
       this.ready = false;
       warn("[MessageBroker - Redis]", "Disconnected from Redis Database. Please resolve this as soon as possible")
     });
+
+    this.redisClient.on('error', (err) => {
+      if (err.message.toLowerCase() === "socket closed unexpectedly")
+        this.ready = false;
+      error(err);
+    })
+
+    this.connect();
   }
 
   async connect() {

@@ -31,13 +31,13 @@ socket.on('connect', async () => {
 
   const tid = util.snowflake()
 
-  await socket.emitWithAck("cronJobMessage", tid,
+  await socket.emitWithAck("cronJobMessage", String(tid),
     {
       database: database.connectionParameters.database ?? null,
       type: 'data',
       interval: 'minute',
       transactionTime: Date.now(),
-      transactionId: tid
+      transactionId: String(tid)
     },
     {
       reminder: reminder.rows,
