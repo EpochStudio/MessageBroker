@@ -2,9 +2,11 @@ const {Server} = require('socket.io')
 const Constants = require('./utils/constant')
 const io = new Server(3000);
 const RedisManager = require('./struct/redis')
-const RedisClient = new RedisManager({...require('./config').loginCred.redis, database: 9})
+const RedisClient = new RedisManager({...require('./config').loginCred.redis, database: 9});
 
 (async () => {
+  await RedisClient.connect()
+
   const clients = {};
 
   console.log(`[Message Broker] Running on version ${require('../package.json').version} stable.`)
@@ -32,14 +34,16 @@ const RedisClient = new RedisManager({...require('./config').loginCred.redis, da
       }
 
       const regKey = `${clientOptions.signature}_${clientOptions.clusterId}`
+      const isExists = await RedisClient.getKey(regKey);
+      if (isExists) return socket.disconnect(true);
 
-      // Register in the System
-      clients[regKey] = {
+      await RedisClient.setKey(regKey, {
         sessionId: socket.id,
         registeredKey: regKey,
         allowedBuffer: clientOptions.receiveBuffer,
         receiveTransactionInfo: clientOptions.receiveTransactionInfo || false
-      };
+      });
+
       console.log(`Client registered: ${regKey} with Session ID: ${socket.id} with Signature: ${clientOptions.signature} | Cluster: ${clientOptions.clusterId}`)
     })
 
