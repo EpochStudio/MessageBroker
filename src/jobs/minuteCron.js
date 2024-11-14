@@ -33,7 +33,7 @@ socket.on('connect', async () => {
 
   await socket.emitWithAck("cronJobMessage", tid,
     {
-      database: database.connectionParameters.database ?? "UNKNOWN",
+      database: database.connectionParameters.database ?? null,
       type: 'data',
       interval: 'minute',
       transactionTime: Date.now(),

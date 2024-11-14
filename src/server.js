@@ -3,6 +3,7 @@ const Constants = require('./utils/constant')
 const io = new Server(3000);
 const RedisManager = require('./struct/redis')
 const RedisClient = new RedisManager({...require('./config').loginCred.redis, database: 9});
+const { warn } = require('./utils/logger');
 
 (async () => {
   await RedisClient.connect()
@@ -55,6 +56,8 @@ const RedisClient = new RedisManager({...require('./config').loginCred.redis, da
       }
 
       console.log(`Transaction item received from cronjob: T${tid}`);
+
+      if (!transactionInfo.database.toLowerCase()) return warn('INVALID_DATABASE_RECEIVED', 'The database name received via transaction info was not received.')
 
       for await (const key of RedisClient.redisClient.scanIterator({
         MATCH: `${transactionInfo.database.toLowerCase()}:*`
