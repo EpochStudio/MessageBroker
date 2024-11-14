@@ -1,6 +1,6 @@
 {
   "name": "galaxies-msg-broker",
-  "version": "2.0.0-beta",
+  "version": "2.0.0",
   "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
