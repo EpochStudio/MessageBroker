@@ -7,8 +7,6 @@ const RedisClient = new RedisManager({...require('./config').loginCred.redis, da
 (async () => {
   await RedisClient.connect()
 
-  const clients = {};
-
   console.log(`[Message Broker] Running on version ${require('../package.json').version} stable.`)
 
   io.on('connection', (socket) => {
@@ -33,7 +31,7 @@ const RedisClient = new RedisManager({...require('./config').loginCred.redis, da
         }
       }
 
-      const regKey = `${clientOptions.signature}_${clientOptions.clusterId}`
+      const regKey = `${clientOptions.signature}:${clientOptions.clusterId}`
       const isExists = await RedisClient.getKey(regKey);
       if (isExists) return socket.disconnect(true);
 
@@ -58,28 +56,35 @@ const RedisClient = new RedisManager({...require('./config').loginCred.redis, da
 
       console.log(`Transaction item received from cronjob: T${tid}`);
 
-      for (const key of Object.keys(clients)) {
-        const [clientSignature, clientCluster] = key.split("_")
+      for await (const key of RedisClient.redisClient.scanIterator({
+        MATCH: `${transactionInfo.database.toLowerCase()}:*`
+      })) {
+        const registry = await RedisClient.getKey(key);
+        if (!registry) continue;
 
-        if (transactionInfo.database.toLowerCase() !== clientSignature.toLowerCase()) continue;
-        if (!clients[key].allowedBuffer.includes(transactionInfo.interval)) continue;
+        const [clientSignature, clientCluster] = registry.registeredKey.split(":");
+        if (!registry.allowedBuffer.includes(transactionInfo.interval)) continue;
 
-        await io.to(clients[key].sessionId).emitWithAck('messageFromCron', {
+        await io.to(registry.sessionId).emitWithAck('messageFromCron', {
           registeredKey: key,
           tid,
-          transactionInfo: clients[key].receiveTransactionInfo ? transactionInfo : null,
+          transactionInfo: registry.receiveTransactionInfo ? transactionInfo : null,
           data
-        });
+        })
+
         console.log(`Forwarded ${transactionInfo.type} (Interval ${transactionInfo.interval}) to connection ${clientSignature} of cluster ${clientCluster} // CID: ${key} // TID: ${tid}`);
       }
     })
 
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', async (reason) => {
       console.log(`Client Disconnected! Session ID: ${socket.id} with Reason: ${reason}`)
 
-      for (const key of Object.keys(clients)) {
-        if (clients[key].sessionId === socket.id) {
-          delete clients[key];
+      for await (const key of RedisClient.redisClient.scanIterator()) {
+        const registry = await RedisClient.getKey(key);
+        if (!registry) continue;
+
+        if (registry.sessionId === socket.id) {
+          await RedisClient.delete(key);
           console.log(`Client unregistered: ${key} with Session ID: ${socket.id}`)
         }
       }
