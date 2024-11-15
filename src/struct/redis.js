@@ -24,8 +24,6 @@ module.exports = class Redis {
         this.ready = false;
       error(err);
     })
-
-    this.connect();
   }
 
   async connect() {
