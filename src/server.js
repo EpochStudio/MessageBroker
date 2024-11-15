@@ -21,10 +21,38 @@ const {warn} = require('./utils/logger');
     socket.on('registerCluster', async (clientOptions = {}, callback) => {
       // Verifying client options passed through.
 
-      if (!String(clientOptions.clusterId) || !clientOptions.signature) return socket.disconnect(true);
-      if (typeof clientOptions.receiveBuffer !== 'object' || !clientOptions.receiveBuffer.length) return socket.disconnect(true);
-      if (!clientOptions.password || typeof clientOptions.password !== 'string') return socket.disconnect(true);
-      if (config.authentication.require && clientOptions.password !== config.authentication.authkey) return socket.disconnect(true)
+      if (!String(clientOptions.clusterId) || !clientOptions.signature) {
+        socket.emit("error", {
+          code: 400,
+          message: "Bad Request - Missing clusterId or signature in clientOptions."
+        })
+
+        return socket.disconnect(true);
+      }
+      if (typeof clientOptions.receiveBuffer !== 'object' || !clientOptions.receiveBuffer.length) {
+        socket.emit("error", {
+          code: 400,
+          message: "Bad Request - Missing receiveBuffer property or invalid receiveBuffer property was provided."
+        })
+
+        return socket.disconnect(true)
+      }
+      if (config.authentication.require && (!clientOptions.password || typeof clientOptions.password !== 'string')) {
+        socket.emit("error", {
+          code: 401,
+          message: "Unauthorized - The server requires authentication, however no passkey was provided, or the provided passkey was not a string."
+        })
+
+        return socket.disconnect(true)
+      }
+      if (config.authentication.require && clientOptions.password !== config.authentication.authkey) {
+        socket.emit("error", {
+          code: 401,
+          message: "Unauthorized - The server requires authentication, however the provided passkey was incorrect."
+        })
+
+        return socket.disconnect(true)
+      }
 
       let violation = false;
       for (const buffer of clientOptions.receiveBuffer) {
@@ -33,7 +61,14 @@ const {warn} = require('./utils/logger');
           break;
         }
       }
-      if (violation) return socket.disconnect(true);
+      if (violation) {
+        socket.emit("error", {
+          code: 400,
+          message: "Bad Request - One of the provided buffers is not a valid buffer recognized by the server."
+        })
+
+        return socket.disconnect(true);
+      }
 
       // Callback if necessary
       try {
@@ -46,7 +81,14 @@ const {warn} = require('./utils/logger');
 
       const regKey = `${clientOptions.signature}:${clientOptions.clusterId}`
       const isExists = await RedisClient.getKey(regKey);
-      if (isExists) return socket.disconnect(true);
+      if (isExists) {
+        socket.emit("error", {
+          code: 409,
+          message: "Conflict - The provided signature and clusterId has already been registered in the system."
+        })
+
+        return socket.disconnect(true)
+      }
 
       await RedisClient.setKey(regKey, {
         sessionId: socket.id,
