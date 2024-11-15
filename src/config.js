@@ -1,5 +1,6 @@
 module.exports = {
   serverport: 3000,
+  authkey: process.env.AUTHENTICATION_KEY,
   loginCred: {
     postgresql: {
       host: process.env.DB_HOST,
