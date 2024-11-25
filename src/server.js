@@ -9,7 +9,9 @@ const RedisClient = new RedisManager({...config.loginCred.redis, database: 9});
 const {warn} = require('./utils/logger');
 
 (async () => {
-  if (config.authentication.require && !config.authentication.authkey) throw new Error('[NOAUTH] Authentication Key not supplied in config file.')
+    if (config.authentication.require && !config.authentication.authkey) {
+      throw new Error('[NOAUTH] Authentication Key not supplied in config file.')
+    }
 
   await RedisClient.connect()
 
