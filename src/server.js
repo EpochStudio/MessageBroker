@@ -72,15 +72,6 @@ const {warn} = require('./utils/logger');
         return socket.disconnect(true);
       }
 
-      // Callback if necessary
-      try {
-        await callback(200)
-      } catch (err) {
-        if (err.message.includes("function")) {
-          console.log("Callback not issued, as an acknowledgment from the server was not required.")
-        }
-      }
-
       const regKey = `${clientOptions.signature}:${clientOptions.clusterId}`
       const isExists = await RedisClient.getKey(regKey);
       if (isExists) {
@@ -98,6 +89,15 @@ const {warn} = require('./utils/logger');
         allowedBuffer: clientOptions.receiveBuffer,
         receiveTransactionInfo: clientOptions.receiveTransactionInfo || false
       });
+
+      // Callback if necessary
+      try {
+        await callback(200)
+      } catch (err) {
+        if (err.message.includes("function")) {
+          console.log("Callback not issued, as an acknowledgment from the server was not required.")
+        }
+      }
 
       console.log(`Client registered: ${regKey} with Session ID: ${socket.id} with Signature: ${clientOptions.signature} | Cluster: ${clientOptions.clusterId}`)
     })
