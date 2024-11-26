@@ -97,6 +97,7 @@ const {warn} = require('./utils/logger');
         if (err.message.includes("function")) {
           console.log("Callback not issued, as an acknowledgment from the server was not required.")
         }
+        return;
       }
 
       console.log(`Client registered: ${regKey} with Session ID: ${socket.id} with Signature: ${clientOptions.signature} | Cluster: ${clientOptions.clusterId}`)
