@@ -6,7 +6,7 @@ const config = require('./config');
 const io = new Server(config.serverport);
 const RedisManager = require('./struct/redis')
 const RedisClient = new RedisManager({...config.loginCred.redis, database: 9});
-const {warn} = require('./utils/logger');
+const {warn, log} = require('./utils/logger');
 
 (async () => {
     if (config.authentication.require && !config.authentication.authkey) {
@@ -15,7 +15,7 @@ const {warn} = require('./utils/logger');
 
   await RedisClient.connect()
 
-  console.log(`[Message Broker] Running on version ${require('../package.json').version} stable.`)
+  log(`Message Broker`, `Running on version ${require('../package.json').version} stable.`)
 
   io.on('connection', (socket) => {
     console.log(`Client connected! Session ID: ${socket.id}`)
