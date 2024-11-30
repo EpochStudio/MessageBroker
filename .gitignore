@@ -1,2 +1,6 @@
 node_modules
 .env
+/galaxies-msg-broker/.idea/discord.xml
+/logs/log.txt
+/galaxies-msg-broker/.idea/workspace.xml
+/galaxies-msg-broker/.idea/vcs.xml
