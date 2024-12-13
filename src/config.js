@@ -1,8 +1,11 @@
 module.exports = {
-  serverport: 3000,
-  authentication: {
-    require: true,
-    authkey: process.env.AUTH_KEY
+  property: {
+    port: 3000,
+    redisDb: 9,
+    authentication: {
+      require: true,
+      authKey: process.env.AUTH_KEY
+    }
   },
   loginCred: {
     postgresql: {

@@ -2,14 +2,14 @@ require('dotenv').config()
 
 const {Server} = require('socket.io')
 const Constants = require('./utils/constant')
-const config = require('./config');
-const io = new Server(config.serverport);
+const { property, loginCred,  } = require('./config');
+const io = new Server(property.port);
 const RedisManager = require('./struct/redis')
-const RedisClient = new RedisManager({...config.loginCred.redis, database: 9});
+const RedisClient = new RedisManager({...loginCred.redis, database: property.redisDb});
 const {warn, log} = require('./utils/logger');
 
 (async () => {
-    if (config.authentication.require && !config.authentication.authkey) {
+    if (property.authentication.require && !property.authentication.authKey) {
       throw new Error('[NOAUTH] Authentication Key not supplied in config file.')
     }
 
