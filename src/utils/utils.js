@@ -1,18 +1,36 @@
 const { Snowflake } = require("@sapphire/snowflake");
 const Constants = require('./constant')
+const { glob} = require('glob')
+const path = require('path')
 
-/**
- * Generates an unique snowflake
- * @returns {bigint}
- */
-function snowflake() {
-  const epoch  = new Date(Constants.galaxiesEpoch)
+module.exports = class Utils {
+  constructor(client) {
+    this.client = client;
+  }
 
-  const snowflake = new Snowflake(epoch)
+  get directory() {
+    return `${path.dirname(require.main.filename)}${path.sep}`
+  }
 
-  return snowflake.generate()
-}
+  snowflake() {
+    const epoch  = new Date(Constants.galaxiesEpoch)
 
-module.exports = {
-  snowflake
+    const snowflake = new Snowflake(epoch)
+
+    return snowflake.generate()
+  }
+  async LoadEvents() {
+    await glob(path.join(this.directory, "events", "**", "*.js"))
+      .then((eventFile) => {
+        for (const event of eventFile) {
+          delete require.cache[event]
+
+          const File = require(event)
+
+          const events = new File(this.client)
+
+
+        }
+      })
+  }
 }

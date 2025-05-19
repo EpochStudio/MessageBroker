@@ -1,5 +1,10 @@
 require('dotenv').config()
 
+const Broker = require('./struct/broker')
+
+
+
+/*
 const {Server} = require('socket.io')
 const Constants = require('./utils/constant')
 const { property, loginCred,  } = require('./config');
@@ -20,7 +25,7 @@ const {warn, log} = require('./utils/logger');
   io.on('connection', (socket) => {
     console.log(`Client connected! Session ID: ${socket.id}`)
 
-    socket.on('registerCluster', async (clientOptions = {}, callback) => {
+    socket.on('registerCluster', async (clientOptions, callback) => {
       // Verifying client options passed through.
 
       if (!String(clientOptions.clusterId) || !clientOptions.signature) {
@@ -151,3 +156,5 @@ const {warn, log} = require('./utils/logger');
     })
   })
 })()
+
+ */
