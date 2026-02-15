@@ -51,5 +51,7 @@ socket.on('connect', async () => {
       database.end(),
       socket.disconnect()
     ])
+
+    process.exit(0)
   })
 })
